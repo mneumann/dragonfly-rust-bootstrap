@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Arc","A thread-safe reference-counting pointer."],["Weak","A weak version of [`Arc`][arc]."]]});
