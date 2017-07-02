@@ -9,6 +9,13 @@ DEST=$1
 DEST_INSTALL=$DEST/install
 ARG=$2
 
+export LD_LIBRARY_PATH="${BOOTSTRAP_COMPILER_BASE}/lib:$LD_LIBRARY_PATH"
+#export RUST_LOG=debug
+export RUST_BACKTRACE=1
+
+# we need these to avoid patching the sources for sha256sum
+export PATH=$BASE/bin:$PATH
+
 if [ "$ARG" = "CONT" ]; then
 	cd $DEST
 	cd rustc-$RUST_VERSION-src
@@ -19,20 +26,7 @@ else
 	#fetch https://static.rust-lang.org/dist/rustc-$RUST_VERSION-src.tar.gz
 	tar xvzf $BASE/dist/rustc-$RUST_VERSION-src.tar.gz
 	cd rustc-$RUST_VERSION-src
-fi
 
-export LD_LIBRARY_PATH="${BOOTSTRAP_COMPILER_BASE}/lib:$LD_LIBRARY_PATH"
-#export RUST_LOG=debug
-export RUST_BACKTRACE=1
-
-# we need these to avoid patching the sources for sha256sum
-export PATH=$BASE/bin:$PATH
-
-# TODO: patch cargo in rust sources
-
-if [ "$ARG" = "CONT" ]; then
-	echo nothing to do
-else
 	for patch in $BASE/patches/patch-*; do
 		echo $patch
 		patch < $patch
