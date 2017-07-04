@@ -28,6 +28,15 @@ tar xvzf $BASE/dist/rust-installer/4f994850808a572e2cc8d43f968893c8e942e9bf.tar.
 
 cpdup -v rust-installer-4f994850808a572e2cc8d43f968893c8e942e9bf cargo-$CARGO_V/src/rust-installer
 
+# we need overrides for libc to fix a pthread issue with cargo
+git clone https://github.com/mneumann/libc.git
+cd libc
+git checkout 9fe906c72ec90282f98ebfde500d5f19a03df478
+cd ..
+
+mkdir -p $DEST/.cargo
+echo "paths = [\"$DEST/libc\"]" >> $DEST/.cargo/config
+
 cd cargo-$CARGO_V
 patch -p1 < $BASE/patches-cargo/$CARGO_V.patch
 

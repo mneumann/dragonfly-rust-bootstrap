@@ -39,7 +39,7 @@ done
 ./configure \
 	--enable-cargo-openssl-static --enable-extended \
 	--enable-local-rust --local-rust-root=${BOOTSTRAP_COMPILER_BASE} \
-	--llvm-root=/usr/local/llvm40 --prefix=$DEST_INSTALL
+	--prefix=$DEST_INSTALL
 
 mkdir -p $DEST/rustc-$RUST_VERSION-src/build/x86_64-unknown-dragonfly/stage0
 cpdup -vv $BOOTSTRAP_COMPILER_BASE $DEST/rustc-$RUST_VERSION-src/build/x86_64-unknown-dragonfly/stage0

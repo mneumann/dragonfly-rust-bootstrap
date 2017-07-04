@@ -32,11 +32,9 @@ else
 		patch < $patch
 	done
 
-	#	--enable-clang --enable-cargo-openssl-static --enable-extended \
-		#--enable-clang --enable-cargo-openssl-static --enable-locked-deps \
 	./configure \
 		--enable-local-rust --local-rust-root=${BOOTSTRAP_COMPILER_BASE} \
-		--llvm-root=/usr/local/llvm40 --prefix=$DEST_INSTALL
+		--prefix=$DEST_INSTALL
 fi
 
 gmake VERBOSE=YES all dist install 2>&1 | tee out.log

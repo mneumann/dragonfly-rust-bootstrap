@@ -219,28 +219,6 @@ index 64ddeb96..1788da20 100644
  else
  SHASUM := sha256sum
  endif
-diff --git a/src/cargo/ops/cargo_compile.rs b/src/cargo/ops/cargo_compile.rs
-index 06749815..58a99bb9 100644
---- a/src/cargo/ops/cargo_compile.rs
-+++ b/src/cargo/ops/cargo_compile.rs
-@@ -158,7 +158,7 @@ pub fn compile_ws<'a>(ws: &Workspace<'a>,
-                       options: &CompileOptions<'a>,
-                       exec: Arc<Executor>)
-                       -> CargoResult<ops::Compilation<'a>> {
--    let CompileOptions { config, jobs, target, spec, features,
-+    let CompileOptions { config, mut jobs, target, spec, features,
-                          all_features, no_default_features,
-                          release, mode, message_format,
-                          ref filter,
-@@ -171,6 +171,8 @@ pub fn compile_ws<'a>(ws: &Workspace<'a>,
-         bail!("jobs must be at least 1")
-     }
- 
-+    jobs = Some(1);
-+
-     let profiles = ws.profiles();
- 
-     let specs = spec.into_package_id_specs(ws)?;
 diff --git a/src/crates-io/Cargo.toml b/src/crates-io/Cargo.toml
 index 21db0467..9bc99f34 100644
 --- a/src/crates-io/Cargo.toml
