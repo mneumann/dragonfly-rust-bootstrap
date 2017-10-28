@@ -82,7 +82,7 @@ build() {
 	gmake VERBOSE=YES JOBS=1 all dist install 2>&1 | tee out.log
 }
 
-#extract && patch1 && config && patch2 && build
+extract && patch1 && config && patch2 && build
 
 cd $DEST/rustc-$RUST_VERSION-src
 gmake VERBOSE=YES JOBS=1 install
