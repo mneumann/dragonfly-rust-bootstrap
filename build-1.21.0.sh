@@ -6,6 +6,8 @@ RUST_VERSION=1.21.0
 TARGET=x86_64-unknown-dragonfly
 LIBRESSL_VERSION=2.5.5
 
+# ----------------------------------------
+
 BASE=`pwd`
 DEST=$1
 DEST_INSTALL=$DEST/install
@@ -112,8 +114,9 @@ config() {
 		--enable-locked-deps --disable-jemalloc --enable-clang \
 		--enable-local-rust --local-rust-root=${BOOTSTRAP_COMPILER_BASE} \
 		--sysconfdir=${DEST_INSTALL}/etc \
-		--llvm-root=/usr/local/llvm50 \
 		--prefix=${DEST_INSTALL}
+
+#		--llvm-root=/usr/local/llvm50
 }
 
 postpatch() {
