@@ -115,8 +115,6 @@ config() {
 		--enable-local-rust --local-rust-root=${BOOTSTRAP_COMPILER_BASE} \
 		--sysconfdir=${DEST_INSTALL}/etc \
 		--prefix=${DEST_INSTALL}
-
-#		--llvm-root=/usr/local/llvm50
 }
 
 postpatch() {
@@ -203,7 +201,7 @@ all() {
 	config || exit 7
 	postpatch || exit 8
 	build || exit 9
-	dist || exit 10 
+	dist || exit 10
 	inst || exit 11
 }
 
