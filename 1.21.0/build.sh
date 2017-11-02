@@ -28,7 +28,7 @@ fi
 export PATH=/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
 # we need these to avoid patching the sources for sha256sum
-export PATH=$PATH:$BASE/bin
+export PATH=$PATH:$BASE/../bin
 
 mkdir -p $DEST/bootstrap
 
@@ -83,22 +83,19 @@ extract() {
 
 	for component in ${COMPONENTS}; do
 		echo "INSTALL COMPONENT: ${component}"
-		tar xvzf $BASE/bootstrap/rust-${RUSTC_BOOTSTRAP_VERSION}/$component-${TARGET}.tar.xz -C $DEST/tmp
+		tar xvzf $BASE/bootstrap/$component-${TARGET}.tar.xz -C $DEST/tmp
 		$DEST/tmp/$component-${TARGET}/install.sh --prefix=$DEST/bootstrap
 	done
 
 
-	if [ ! -f $BASE/dist/rustc-$RUST_VERSION-src.tar.gz ]; then
-		fetch -o $BASE/dist/rustc-$RUST_VERSION-src.tar.gz https://static.rust-lang.org/dist/rustc-$RUST_VERSION-src.tar.gz 
-	fi
-
-	tar xvzf $BASE/dist/rustc-$RUST_VERSION-src.tar.gz 2>&1 | wc -l
+	fetch -o $DEST/rustc-$RUST_VERSION-src.tar.gz https://static.rust-lang.org/dist/rustc-$RUST_VERSION-src.tar.gz 
+	tar xvzf $DEST/rustc-$RUST_VERSION-src.tar.gz 2>&1 | wc -l
 }
 
 prepatch() {
 	lll "PREPATCH"
 	cd $DEST/rustc-$RUST_VERSION-src
-	for patch in $BASE/patches/${RUST_VERSION}/patch-*; do
+	for patch in $BASE/patches/patch-*; do
 		echo $patch
 		patch < $patch
 	done
@@ -120,7 +117,7 @@ config() {
 postpatch() {
 	lll "POSTPATCH"
 	cd $DEST/rustc-$RUST_VERSION-src
-	for patch in $BASE/patches/${RUST_VERSION}/after-configure/patch-*; do
+	for patch in $BASE/patches/after-configure/patch-*; do
 		echo $patch
 		patch < $patch
 	done
