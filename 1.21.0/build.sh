@@ -41,13 +41,12 @@ fi
 
 export LD_LIBRARY_PATH="${BOOTSTRAP_COMPILER_BASE}/lib:$LD_LIBRARY_PATH"
 
-# for static cargo?
+# for static cargo
 export LIBSSH2_NO_PKG_CONFIG=1
 export LIBCURL_NO_PKG_CONFIG=1
 export LIBZ_NO_PKG_CONFIG=1 
 export PROFILE=release
 export LIBZ_SYS_STATIC=1
-
 export OPENSSL_NO_PKG_CONFIG=1
 export OPENSSL_LIB_DIR=$DEST/libressl/lib
 export OPENSSL_INCLUDE_DIR=$DEST/libressl/include
@@ -95,12 +94,13 @@ extract() {
 prepatch() {
 	lll "PREPATCH"
 	cd $DEST/rustc-$RUST_VERSION-src
-	for patch in $BASE/patches/patch-*; do
-		echo $patch
-		patch < $patch
-	done
+	if [ -d $BASE/patches ]; then
+		for patch in $BASE/patches/patch-*; do
+			echo $patch
+			patch < $patch
+		done
+	fi
 }
-
 
 config() {
 	lll "CONFIG"
@@ -117,16 +117,18 @@ config() {
 postpatch() {
 	lll "POSTPATCH"
 	cd $DEST/rustc-$RUST_VERSION-src
-	for patch in $BASE/patches/after-configure/patch-*; do
-		echo $patch
-		patch < $patch
-	done
+	if [ -d $BASE/patches/after-configure ]; then
+		for patch in $BASE/patches/after-configure/patch-*; do
+			echo $patch
+			patch < $patch
+		done
+	fi
 }
 
 run() {
 	lll $1
 	cd $DEST/rustc-$RUST_VERSION-src
-	gmake VERBOSE=YES JOBS=1 $2
+	gmake VERBOSE=YES $2
 }
 
 build() {
