@@ -16,12 +16,20 @@ COMPONENTS="cargo-${CARGO_BOOTSTRAP_VERSION} rust-std-${RUSTC_BOOTSTRAP_VERSION}
 RELEASE_CHANNEL=$2
 
 if [ "$DEST" = "" ]; then
-	echo "Usage: $0 target-dir [release-channel=stable|dev]"
+	echo "Usage: $0 target-dir [release-channel=stable|dev] [llvm-dir]"
 	exit 1
 fi
 
 if [ "$RELEASE_CHANNEL" = "" ]; then
 	RELEASE_CHANNEL=stable
+fi
+
+if [ "$3" = "" ]; then
+	echo "Use in-tree LLVM"
+	LLVM_ROOT_OPT=""
+else
+	echo "Use LLVM tree: $3"
+	LLVM_ROOT_OPT="--llvm-root=$3"
 fi
 
 # set path
@@ -111,7 +119,8 @@ config() {
 		--enable-locked-deps --disable-jemalloc --enable-clang \
 		--enable-local-rust --local-rust-root=${BOOTSTRAP_COMPILER_BASE} \
 		--sysconfdir=${DEST_INSTALL}/etc \
-		--prefix=${DEST_INSTALL}
+		--prefix=${DEST_INSTALL} \
+		${LLVM_ROOT_OPT}
 }
 
 postpatch() {
