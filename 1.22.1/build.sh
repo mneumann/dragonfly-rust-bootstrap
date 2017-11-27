@@ -2,13 +2,13 @@
 
 RUSTC_BOOTSTRAP_VERSION=1.21.0
 CARGO_BOOTSTRAP_VERSION=0.22.0
-RUST_VERSION=1.22.0
+RUST_VERSION=1.22.1
 
 BASE=`pwd`
 DEST=$1
 RELEASE_CHANNEL=stable
 LLVM_ROOT=""
-RUST_DIST_SERVER=https://dev-static.rust-lang.org
+#RUST_DIST_SERVER=https://dev-static.rust-lang.org
 
 . ../checksums.sh
 . ../common.sh
