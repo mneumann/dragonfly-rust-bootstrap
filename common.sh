@@ -100,6 +100,13 @@ clean() {
 }
 
 download() {
+	file=`echo $1 | tr  ".-" "_"`
+	eval "expected_cksum=\$SHA256_${file}"
+	if [ "${expected_cksum}" = "" ]; then
+		echo "no sha256 checksum for $1. aborting"
+		exit 1
+	fi
+
 	if [ -f /usr/distfiles/$1 ]; then
 		echo "$1 exists in /usr/distfiles"
 		cp /usr/distfiles/$1 .
@@ -107,21 +114,30 @@ download() {
 		echo "download: $1 from $2"
 		fetch -o $1 $2/$1
 	fi
+
+	cksum=`sha256 -q $1`
+
+	if [ "${cksum}" = "${expected_cksum}" ]; then
+		echo "checksum ok for $1"
+	else
+		echo "checksum mismatch. expected: ${expected_cksum}. given: ${cksum}"
+		exit 1
+	fi
 }
 
 libressl() {
 	mkdir -p $DEST/libressl
 	cd $DEST
-	download libressl-$1.tar.gz https://ftp.openbsd.org/pub/OpenBSD/LibreSSL
+	download libressl-$1.tar.gz https://ftp.openbsd.org/pub/OpenBSD/LibreSSL || exit 1
 	tar xvzf libressl-$1.tar.gz
 	cd libressl-$1
-	./configure --with-pic --prefix=$DEST/libressl
-	make check
-	make install
+	./configure --with-pic --prefix=$DEST/libressl || exit 1
+	make check || exit 1
+	make install || exit 1
 }
 
 libressl-2.5.5() {
-	libressl 2.5.5
+	libressl 2.5.5 || exit 1
 }
 
 extract() {
@@ -135,7 +151,7 @@ extract() {
 	done
 
 
-	(cd $DEST && download rustc-$RUST_VERSION-src.tar.gz ${RUST_DIST_SERVER}/dist)
+	(cd $DEST && download rustc-$RUST_VERSION-src.tar.gz ${RUST_DIST_SERVER}/dist) || exit 1
 	tar xvzf $DEST/rustc-$RUST_VERSION-src.tar.gz 2>&1 | wc -l
 }
 
