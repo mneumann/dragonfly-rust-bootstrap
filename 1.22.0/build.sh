@@ -10,6 +10,7 @@ RELEASE_CHANNEL=stable
 LLVM_ROOT=""
 RUST_DIST_SERVER=https://dev-static.rust-lang.org
 
+. ../checksums.sh
 . ../common.sh
 
 RUN info clean extract libressl-2.5.5 curlsys-0.3.14 prepatch config postpatch build dist inst 2>&1
