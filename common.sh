@@ -9,6 +9,16 @@
 # * DEST
 # * RELEASE_CHANNEL (defaults to "stable")
 # * LLVM_ROOT (defaults to "")
+#
+# Optional:
+#
+#   RUST_DIST_SERVER
+
+if [ "${RUST_DIST_SERVER}" = "" ]; then
+	RUST_DIST_SERVER=https://static.rust-lang.org
+else
+	echo "Using non-default RUST_DIST_SERVER=${RUST_DIST_SERVER}"
+fi
 
 if [ "$RUSTC_BOOTSTRAP_VERSION" = "" ]; then
 	echo "No RUSTC_BOOTSTRAP_VERSION"
@@ -89,10 +99,20 @@ clean() {
 	rm -rf $DEST
 }
 
+download() {
+	if [ -f /usr/distfiles/$1 ]; then
+		echo "$1 exists in /usr/distfiles"
+		cp /usr/distfiles/$1 .
+	else
+		echo "download: $1 from $2"
+		fetch -o $1 $2/$1
+	fi
+}
+
 libressl() {
 	mkdir -p $DEST/libressl
 	cd $DEST
-	fetch https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$1.tar.gz
+	download libressl-$1.tar.gz https://ftp.openbsd.org/pub/OpenBSD/LibreSSL
 	tar xvzf libressl-$1.tar.gz
 	cd libressl-$1
 	./configure --with-pic --prefix=$DEST/libressl
@@ -115,7 +135,7 @@ extract() {
 	done
 
 
-	fetch -o $DEST/rustc-$RUST_VERSION-src.tar.gz https://static.rust-lang.org/dist/rustc-$RUST_VERSION-src.tar.gz 
+	(cd $DEST && download rustc-$RUST_VERSION-src.tar.gz ${RUST_DIST_SERVER}/dist)
 	tar xvzf $DEST/rustc-$RUST_VERSION-src.tar.gz 2>&1 | wc -l
 }
 
