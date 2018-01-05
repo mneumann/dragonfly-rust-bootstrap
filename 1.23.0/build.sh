@@ -1,13 +1,15 @@
 #!/bin/sh
 
-RUSTC_BOOTSTRAP_VERSION=1.20.0
-CARGO_BOOTSTRAP_VERSION=0.21.0
-RUST_VERSION=1.21.0
+# Must be set to the directory where a recent rust snapshot can be found.
+# BOOTSTRAP_DIR=
+
+RUSTC_BOOTSTRAP_VERSION=1.22.1
+CARGO_BOOTSTRAP_VERSION=0.23.0
+RUST_VERSION=1.23.0
 
 BASE=`pwd`
 DEST=$1
 LLVM_ROOT=""
-ADDITIONAL_CONFIGURE_FLAGS=--enable-local-rust
 
 . ../checksums.sh
 . ../common.sh

@@ -6,11 +6,13 @@ RUST_VERSION=1.22.1
 
 BASE=`pwd`
 DEST=$1
-RELEASE_CHANNEL=stable
 LLVM_ROOT=""
-#RUST_DIST_SERVER=https://dev-static.rust-lang.org
 
 . ../checksums.sh
 . ../common.sh
 
-RUN info clean extract libressl-2.5.5 curlsys-0.3.14 prepatch config postpatch build dist inst 2>&1
+fixup-vendor() {
+	fixup-vendor-patch curl-sys build.rs || exit 1
+}
+
+RUN info clean extract prepatch fixup-vendor config build dist inst 2>&1

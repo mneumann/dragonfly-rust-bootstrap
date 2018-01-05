@@ -5,10 +5,14 @@ RUST_VERSION=1.20.0
 
 BASE=`pwd`
 DEST=$1
-RELEASE_CHANNEL=stable
 LLVM_ROOT=""
+ADDITIONAL_CONFIGURE_FLAGS=--enable-local-rust
 
 . ../checksums.sh
 . ../common.sh
 
-RUN info clean extract libressl-2.5.5 curlsys-0.3.14 prepatch config postpatch build dist inst 2>&1
+fixup-vendor() {
+	fixup-vendor-patch curl-sys build.rs || exit 1
+}
+
+RUN info clean extract prepatch fixup-vendor config build dist inst 2>&1

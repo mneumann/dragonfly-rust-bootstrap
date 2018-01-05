@@ -13,6 +13,8 @@
 # Optional:
 #
 #   RUST_DIST_SERVER
+#   BOOTSTRAP_DIR		the directory where the bootstrap compiler can be found
+#   ADDITIONAL_CONFIGURE_FLAGS
 
 if [ "${RUST_DIST_SERVER}" = "" ]; then
 	RUST_DIST_SERVER=https://static.rust-lang.org
@@ -64,6 +66,14 @@ else
 	LLVM_ROOT_OPT="--llvm-root=${LLVM_ROOT}"
 fi
 
+if [ "${BOOTSTRAP_DIR}" = "" ]; then
+	BOOTSTRAP_DIR=$BASE/bootstrap
+else
+	echo "Using non-default BOOTSTRAP_DIR=${BOOTSTRAP_DIR}"
+fi
+
+
+BASH=bash
 TARGET=x86_64-unknown-dragonfly
 DEST_INSTALL=$DEST/install
 COMPONENTS="cargo-${CARGO_BOOTSTRAP_VERSION} rust-std-${RUSTC_BOOTSTRAP_VERSION} rustc-${RUSTC_BOOTSTRAP_VERSION}"
@@ -92,8 +102,6 @@ export LIBZ_NO_PKG_CONFIG=1
 export PROFILE=release
 export LIBZ_SYS_STATIC=1
 export OPENSSL_NO_PKG_CONFIG=1
-export OPENSSL_LIB_DIR=$DEST/libressl/lib
-export OPENSSL_INCLUDE_DIR=$DEST/libressl/include
 
 clean() {
 	rm -rf $DEST
@@ -103,7 +111,7 @@ download() {
 	file=`echo $1 | tr  ".-" "_"`
 	eval "expected_cksum=\$SHA256_${file}"
 	if [ "${expected_cksum}" = "" ]; then
-		echo "no sha256 checksum for $1. aborting"
+		echo "no sha256 checksum for $2/$1. aborting"
 		exit 1
 	fi
 
@@ -125,19 +133,16 @@ download() {
 	fi
 }
 
-libressl() {
-	mkdir -p $DEST/libressl
-	cd $DEST
-	download libressl-$1.tar.gz https://ftp.openbsd.org/pub/OpenBSD/LibreSSL || exit 1
-	tar xvzf libressl-$1.tar.gz
-	cd libressl-$1
-	./configure --with-pic --prefix=$DEST/libressl || exit 1
-	make check || exit 1
-	make install || exit 1
-}
+SHA256=sha256
+REINPLACE_CMD="sed -i.bak"
 
-libressl-2.5.5() {
-	libressl 2.5.5 || exit 1
+fixup-vendor-patch() {
+	cd $DEST/rustc-$RUST_VERSION-src/src/vendor/$1
+	file=$2
+	old_checksum=`${SHA256} -q "${file}.orig"`
+	new_checksum=`${SHA256} -q "${file}"`
+	regex="-e s|\"${file}\":\"${old_checksum}\"|\"${file}\":\"${new_checksum}\"|"; \
+	${REINPLACE_CMD} -E ${regex} .cargo-checksum.json || exit 1
 }
 
 extract() {
@@ -146,8 +151,9 @@ extract() {
 
 	for component in ${COMPONENTS}; do
 		echo "INSTALL COMPONENT: ${component}"
-		tar xvzf $BASE/bootstrap/$component-${TARGET}.tar.xz -C $DEST/tmp
-		$DEST/tmp/$component-${TARGET}/install.sh --prefix=$DEST/bootstrap
+		tar xvzf ${BOOTSTRAP_DIR}/$component-${TARGET}.tar.xz -C $DEST/tmp
+		# install.sh needs bash, but used !/bin/bash which does not exist on DragonFly
+		${BASH} $DEST/tmp/$component-${TARGET}/install.sh --prefix=$DEST/bootstrap
 	done
 
 
@@ -170,21 +176,13 @@ config() {
 	./configure \
 		--release-channel=${RELEASE_CHANNEL} \
 		--enable-cargo-openssl-static --enable-extended \
+		--enable-vendor \
+		${ADDITIONAL_CONFIGURE_FLAGS} \
 		--enable-locked-deps --disable-jemalloc \
-		--enable-local-rust --local-rust-root=${BOOTSTRAP_COMPILER_BASE} \
+		--local-rust-root=${BOOTSTRAP_COMPILER_BASE} \
 		--sysconfdir=${DEST_INSTALL}/etc \
 		--prefix=${DEST_INSTALL} \
 		${LLVM_ROOT_OPT}
-}
-
-postpatch() {
-	cd $DEST/rustc-$RUST_VERSION-src
-	if [ -d $BASE/patches/after-configure ]; then
-		for patch in $BASE/patches/after-configure/patch-*; do
-			echo $patch
-			patch < $patch
-		done
-	fi
 }
 
 mk() {
@@ -209,45 +207,6 @@ info() {
 	echo Dest: $DEST
 	echo BOOTSTRAP_COMPILER_BASE: ${BOOTSTRAP_COMPILER_BASE}
 	echo Path: $PATH
-}
-
-curlsys-0.3.14() {
-	cd $DEST
-	if [ ! -e curl-rust ]; then 
-		git clone https://github.com/alexcrichton/curl-rust.git
-	fi
-	cd curl-rust
-	git checkout -f curl-sys-0.3.14 || exit 5
-
-	patch -p1 <<EOF
---- a/curl-sys/build.rs
-+++ b/curl-sys/build.rs
-@@ -172,7 +172,7 @@ fn main() {
-     }
- 
-     cmd.arg("--without-librtmp");
--    cmd.arg("--without-libidn");
-+    cmd.arg("--without-libidn2");
-     cmd.arg("--without-libssh2");
-     cmd.arg("--without-libpsl");
-     cmd.arg("--disable-ldap");
-@@ -224,7 +224,7 @@ fn fail(s: &str) -> ! {
- }
- 
- fn make() -> Command {
--    let cmd = if cfg!(target_os = "freebsd") {"gmake"} else {"make"};
-+    let cmd = if cfg!(target_os = "dragonfly") {"gmake"} else {"make"};
-     let mut cmd = Command::new(cmd);
-     // We're using the MSYS make which doesn't work with the mingw32-make-style
-     // MAKEFLAGS, so remove that from the env if present.
-EOF
-
-	mkdir -p $DEST/.cargo
-	echo "paths = [\"$DEST/curl-rust/curl-sys\"]" > $DEST/.cargo/config
-
-	# Building curl-sys is not neccessary
-	# cd curl-sys
-	# PATH=${BOOTSTRAP_COMPILER_BASE}/bin:$PATH cargo build -j 1 --verbose
 }
 
 RUN() {
